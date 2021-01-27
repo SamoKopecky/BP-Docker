@@ -1,5 +1,5 @@
 nginx_custom:
-        image: nginx_custom
+        image: nginx_build
         ports: 
                 - 80:80       
-         
+                - 443:443 
