@@ -1,0 +1,5 @@
+nginx_custom:
+        image: nginx_custom
+        ports: 
+                - 80:80       
+         
