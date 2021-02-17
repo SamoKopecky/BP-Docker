@@ -4,6 +4,7 @@ WORKDIR /root
 # Parameters
 ARG OPENSSL_VER=1.1.1d
 ARG NGINX_VER=1.19.6
+ARG PYTHON_VER=3.7.9
 
 # Install required packages
 RUN apt-get update && \
@@ -23,6 +24,11 @@ RUN wget https://www.openssl.org/source/openssl-$OPENSSL_VER.tar.gz && \
 tar -xzf openssl-$OPENSSL_VER.tar.gz && \
 rm openssl-$OPENSSL_VER.tar.gz
 
+# Download and extract python version of PYTHON_VER
+RUN wget https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz && \
+tar -xzf Python-$PYTHON_VER.tgz && \
+rm Python-$PYTHON_VER.tgz 
+
 # Download and extract nginx  version of NGINX_VER
 RUN wget https://nginx.org/download/nginx-$NGINX_VER.tar.gz && \
 tar -xzf nginx-$NGINX_VER.tar.gz && \
@@ -38,6 +44,10 @@ RUN cd /root/openssl-$OPENSSL_VER && \
 ./Configure enable-ssl2 enable-ssl3 enable-ssl3-method linux-x86_64 no-shared --prefix=/usr --openssldir=/usr/lib/ssl enable-weak-ssl-ciphers -DOPENSSL_TLS_SECURITY_LEVEL=0 && \
 make && \
 make install
+
+# Configure python
+RUN cd /root/Python-$PYTHON_VER && \
+./configure --with-openssl=/usr/ --enable-optimizations --with-ssl-default-suites=openssl CFLAGS="-I/usr/include" LDFLAGS="-L/usr"
 
 # Compile and install nginx
 RUN cd /root/nginx-$NGINX_VER && \
