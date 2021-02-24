@@ -1,5 +1,10 @@
-nginx_custom:
-        image: nginx_build
-        ports: 
-                - 80:80       
-                - 443:443 
+version: '3'
+services:
+  nginx_custom_heartlbeed:
+    build:
+      context: .
+      args:
+        OPENSSL_VER: 1.0.1f
+    ports: 
+      - 80:80       
+      - 443:443 
