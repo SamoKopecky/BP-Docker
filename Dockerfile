@@ -42,7 +42,7 @@ rm pcre-8.44.tar.bz2
 # Compile and install openssl
 RUN cd /root/openssl-$OPENSSL_VER && \
 # ./Configure enable-ssl2 enable-ssl3 enable-ssl3-method linux-x86_64 no-shared --prefix=/usr --openssldir=/usr/lib/ssl enable-weak-ssl-ciphers -DOPENSSL_TLS_SECURITY_LEVEL=0 && \ 
-./Configure linux-x86_64 no-shared --prefix=/usr --openssldir=/usr/lib/ssl enable-weak-ssl-ciphers && \
+./Configure linux-x86_64 no-shared --prefix=/usr --openssldir=/usr/lib/ssl enable-weak-ssl-ciphers no-asm && \
 make && \
 make install_sw
 
