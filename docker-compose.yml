@@ -1,10 +1,10 @@
 version: '3'
 services:
-  nginx_custom_insecure_rene_098i:
+  ssltest_test_server:
     build:
       context: .
       args:
-        OPENSSL_VER: 0.9.8i
+        OPENSSL_VER: 1.0.1f
     ports: 
       - 80:80       
       - 443:443 

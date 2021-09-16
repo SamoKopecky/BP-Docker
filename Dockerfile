@@ -25,9 +25,9 @@ tar -xzf openssl-$OPENSSL_VER.tar.gz && \
 rm openssl-$OPENSSL_VER.tar.gz
 
 # Download and extract python version of PYTHON_VER
-RUN wget https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz && \
-tar -xzf Python-$PYTHON_VER.tgz && \
-rm Python-$PYTHON_VER.tgz 
+#RUN wget https://www.python.org/ftp/python/$PYTHON_VER/Python-$PYTHON_VER.tgz && \
+#tar -xzf Python-$PYTHON_VER.tgz && \
+#rm Python-$PYTHON_VER.tgz 
 
 # Download and extract nginx  version of NGINX_VER
 RUN wget https://nginx.org/download/nginx-$NGINX_VER.tar.gz && \
@@ -41,14 +41,16 @@ rm pcre-8.44.tar.bz2
 
 # Compile and install openssl
 RUN cd /root/openssl-$OPENSSL_VER && \
-# ./Configure enable-ssl2 enable-ssl3 enable-ssl3-method linux-x86_64 no-shared --prefix=/usr --openssldir=/usr/lib/ssl enable-weak-ssl-ciphers -DOPENSSL_TLS_SECURITY_LEVEL=0 && \ 
-./Configure linux-x86_64 no-shared --prefix=/usr --openssldir=/usr/lib/ssl enable-weak-ssl-ciphers no-asm && \
+# Unsafe OpenSSL
+./Configure enable-ssl2 enable-ssl3 enable-ssl3-method linux-x86_64 no-shared --prefix=/usr --openssldir=/usr/lib/ssl enable-weak-ssl-ciphers -DOPENSSL_TLS_SECURITY_LEVEL=0 && \ 
+# Safe OpenSSL
+# ./Configure linux-x86_64 no-shared --prefix=/usr --openssldir=/usr/lib/ssl enable-weak-ssl-ciphers no-asm && \
 make && \
 make install_sw
 
 # Configure python
-RUN cd /root/Python-$PYTHON_VER && \
-./configure --with-openssl=/usr/ --enable-optimizations --with-ssl-default-suites=openssl CFLAGS="-I/usr/include" LDFLAGS="-L/usr"
+#RUN cd /root/Python-$PYTHON_VER && \
+#./configure --with-openssl=/usr/ --enable-optimizations --with-ssl-default-suites=openssl CFLAGS="-I/usr/include" LDFLAGS="-L/usr"
 
 # Compile and install nginx
 RUN cd /root/nginx-$NGINX_VER && \
@@ -60,8 +62,18 @@ make install
 ENV PATH="/usr/local/nginx:${PATH}"
 
 # Create keys for nginx server
-RUN mkdir keys && \
-openssl req -x509 -newkey rsa:2048 -keyout /root/keys/key.pem -out /root/keys/cert.pem -days 365 -nodes -subj "/C=SK/ST=Slovakia/L=Slovakia/O=BP/OU=BP/CN=BP.sk" 
+RUN mkdir root intermediate endpoint && \
+mkdir 
+# Root
+openssl req -x509 -newkey rsa:2048 -keyout ./root/root.key -out ./root/root.crt -days 365 -nodes -subj "/C=SK/O=ssltest root/OU=SSLTR/CN=ssltest.sk" 
+# Intermediate
+openssl genrsa -out ./intermediate/intermediate.key 2048 
+openssl req -new -key ./intermediate/intermediate.key -out ./intermediate/intermediate.csr -subj "/C=SK/O=ssltest intermediate/OU=SSLTI/CN=ssltest.sk" 
+openssl req -x509 -days 365 -in ./intermediate/intermediate.csr -CA ./root/root.crt -CAKey ./root/root.key -out ./intermediate/intermediate.crt
+# endpoint
+openssl genrsa -out ./endpoint/endpoint.key 2048 
+openssl req -new -key ./endpoint/endpoint.key -out ./endpoint/endpoint.csr -subj "/C=SK/O=ssltest endpoint/OU=SSLTE/CN=ssltest.sk" 
+openssl req -x509 -days 365 -in ./endpoint/endpoint.csr -CA ./intermediate/intermediate.crt -CAKey ./intermediate/intermediate.key -out ./endpoint/endpoint.crt
 
 # Copy config file 
 COPY nginx.conf /usr/local/nginx/nginx.conf
