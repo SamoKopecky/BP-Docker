@@ -62,18 +62,19 @@ make install
 ENV PATH="/usr/local/nginx:${PATH}"
 
 # Create keys for nginx server
-RUN mkdir root intermediate endpoint && \
-mkdir 
 # Root
-openssl req -x509 -newkey rsa:2048 -keyout ./root/root.key -out ./root/root.crt -days 365 -nodes -subj "/C=SK/O=ssltest root/OU=SSLTR/CN=ssltest.sk" 
+RUN openssl req -x509 -newkey rsa:2048 -keyout root.key -out root.crt -days 365 -nodes -subj "/C=SK/O=ssltest root/OU=SSLTR/CN=ssltest.sk" && \ 
 # Intermediate
-openssl genrsa -out ./intermediate/intermediate.key 2048 
-openssl req -new -key ./intermediate/intermediate.key -out ./intermediate/intermediate.csr -subj "/C=SK/O=ssltest intermediate/OU=SSLTI/CN=ssltest.sk" 
-openssl req -x509 -days 365 -in ./intermediate/intermediate.csr -CA ./root/root.crt -CAKey ./root/root.key -out ./intermediate/intermediate.crt
+openssl genrsa -out intermediate.key 2048 && \
+openssl req -new -key intermediate.key -out intermediate.csr -subj "/C=SK/O=ssltest intermediate/OU=SSLTI/CN=ssltest.sk" && \ 
+openssl x509 -req -days 365 -in intermediate.csr -CA root.crt -CAkey root.key -CAcreateserial -out intermediate.crt && \
 # endpoint
-openssl genrsa -out ./endpoint/endpoint.key 2048 
-openssl req -new -key ./endpoint/endpoint.key -out ./endpoint/endpoint.csr -subj "/C=SK/O=ssltest endpoint/OU=SSLTE/CN=ssltest.sk" 
-openssl req -x509 -days 365 -in ./endpoint/endpoint.csr -CA ./intermediate/intermediate.crt -CAKey ./intermediate/intermediate.key -out ./endpoint/endpoint.crt
+openssl genrsa -out endpoint.key 2048 && \
+openssl req -new -key endpoint.key -out endpoint.csr -subj "/C=SK/O=ssltest endpoint/OU=SSLTE/CN=ssltest.sk" && \
+openssl x509 -req -days 365 -in endpoint.csr -CA intermediate.crt -CAkey intermediate.key -CAcreateserial -out endpoint.crt && \
+cp endpoint.crt cert.pem && \
+cat intermediate.crt >> cert.pem && \
+cat root.crt >> cert.pem 
 
 # Copy config file 
 COPY nginx.conf /usr/local/nginx/nginx.conf

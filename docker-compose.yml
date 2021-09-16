@@ -1,6 +1,6 @@
 version: '3'
 services:
-  ssltest_test_server:
+  1.0.1f:
     build:
       context: .
       args:
